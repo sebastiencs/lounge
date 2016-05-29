@@ -239,7 +239,7 @@ button,
 }
 
 #sidebar {
-	bottom: 52px;
+	bottom: 48px;
 	left: 0;
 	overflow: hidden;
 	-webkit-overflow-scrolling: touch;
@@ -438,14 +438,13 @@ button,
 
 #footer {
 	background: rgba(0, 0, 0, .06);
-	border-radius: 2px;
-	bottom: 4px;
+	bottom: 0;
 	height: 48px;
-	left: 5px;
+	left: 0;
 	line-height: 48px;
 	position: absolute;
 	text-align: center;
-	width: 210px;
+	width: 220px;
 }
 
 #footer button {
@@ -500,13 +499,12 @@ button,
 
 #main {
 	background: #fff;
-	border-radius: 2px;
-	bottom: 4px;
+	bottom: 0;
 	left: 220px;
 	overflow: hidden;
 	position: absolute;
-	right: 5px;
-	top: 4px;
+	right: 0;
+	top: 0;
 }
 
 #header {
@@ -545,18 +543,6 @@ button,
 #windows .input:hover,
 #windows .input:focus {
 	border-color: #79838c;
-}
-
-#windows .window:before,
-#windows .chan:before {
-	background: #f4f4f4;
-	background-image: linear-gradient(#f4f4f4, #ececec);
-	border-bottom: 1px solid #d7d7d7;
-	content: " ";
-	display: block;
-	height: 10px;
-	position: relative;
-	z-index: 10;
 }
 
 #windows .chan,
@@ -635,7 +621,7 @@ button,
 
 #chat .chat,
 #chat .sidebar {
-	top: 58px;
+	top: 48px;
 }
 
 #chat .chat {
@@ -1625,13 +1611,9 @@ button,
 		transform: translate3d(-180px, 0, 0);
 	}
 
-	#sidebar {
-		left: -220px;
-	}
-
+	#sidebar,
 	#footer {
-		left: -215px;
-		width: 215px;
+		left: -220px;
 	}
 
 	#sidebar .empty:before {
@@ -1639,8 +1621,7 @@ button,
 	}
 
 	#main {
-		left: 5px;
-		right: 5px;
+		left: 0;
 	}
 
 	#chat .chat {
