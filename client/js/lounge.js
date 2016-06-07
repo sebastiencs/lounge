@@ -1,4 +1,6 @@
 $(function() {
+	$("#loading-page-message").text("Connecting…");
+
 	var path = window.location.pathname + "socket.io/";
 	var socket = io({path: path});
 	var commands = [
@@ -77,13 +79,10 @@ $(function() {
 	socket.on("auth", function(/* data */) {
 		var body = $("body");
 		var login = $("#sign-in");
-		if (!login.length) {
-			refresh();
-			return;
-		}
 		login.find(".btn").prop("disabled", false);
 		var token = window.localStorage.getItem("token");
 		if (token) {
+			$("#loading-page-message").text("Authorizing…");
 			window.localStorage.removeItem("token");
 			socket.emit("auth", {token: token});
 		}
