@@ -1,4 +1,6 @@
 $(function() {
+	$("#loading-page-message").text("Connecting…");
+
 	var path = window.location.pathname + "socket.io/";
 	var socket = io({path: path});
 	var commands = [
@@ -32,10 +34,6 @@ $(function() {
 	var sidebar = $("#sidebar, #footer");
 	var chat = $("#chat");
 
-	if (navigator.standalone) {
-		$("html").addClass("web-app-mode");
-	}
-
 	var pop;
 	try {
 		pop = new Audio();
@@ -49,8 +47,6 @@ $(function() {
 	$("#play").on("click", function() {
 		pop.play();
 	});
-
-	$(".tse-scrollable").TrackpadScrollEmulator();
 
 	var favicon = $("#favicon");
 
@@ -74,28 +70,26 @@ $(function() {
 		});
 	});
 
-	socket.on("auth", function(/* data */) {
-		var body = $("body");
+	socket.on("auth", function(data) {
 		var login = $("#sign-in");
-		if (!login.length) {
-			refresh();
-			return;
-		}
+
 		login.find(".btn").prop("disabled", false);
-		var token = window.localStorage.getItem("token");
-		if (token) {
+
+		if (!data.success) {
 			window.localStorage.removeItem("token");
-			socket.emit("auth", {token: token});
-		}
-		if (body.hasClass("signed-out")) {
+
 			var error = login.find(".error");
 			error.show().closest("form").one("submit", function() {
 				error.hide();
 			});
+		} else {
+			var token = window.localStorage.getItem("token");
+			if (token) {
+				$("#loading-page-message").text("Authorizing…");
+				socket.emit("auth", {token: token});
+			}
 		}
-		if (!token) {
-			body.addClass("signed-out");
-		}
+
 		var input = login.find("input[name='user']");
 		if (input.val() === "") {
 			input.val(window.localStorage.getItem("user") || "");
@@ -129,6 +123,11 @@ $(function() {
 				feedback.hide();
 			});
 		}
+
+		if (data.token && window.localStorage.getItem("token") !== null) {
+			window.localStorage.setItem("token", data.token);
+		}
+
 		passwordForm
 			.find("input")
 			.val("")
@@ -163,12 +162,15 @@ $(function() {
 			}
 		}
 
-		if (data.token) {
+		if (data.token && $("#sign-in-remember").is(":checked")) {
 			window.localStorage.setItem("token", data.token);
+		} else {
+			window.localStorage.removeItem("token");
 		}
 
 		$("body").removeClass("signed-out");
-		$("#sign-in").detach();
+		$("#loading").remove();
+		$("#sign-in").remove();
 
 		var id = data.active;
 		var target = sidebar.find("[data-id='" + id + "']").trigger("click");
@@ -198,16 +200,18 @@ $(function() {
 			})
 		);
 		renderChannel(data.chan);
-		var chan = sidebar.find(".chan")
+
+		// Queries do not automatically focus, unless the user did a whois
+		if (data.chan.type === "query" && !data.shouldOpen) {
+			return;
+		}
+
+		sidebar.find(".chan")
 			.sort(function(a, b) {
 				return $(a).data("id") - $(b).data("id");
 			})
-			.last();
-		if (!whois) {
-			chan = chan.filter(":not(.query)");
-		}
-		whois = false;
-		chan.click();
+			.last()
+			.click();
 	});
 
 	function buildChatMessage(data) {
@@ -219,6 +223,12 @@ $(function() {
 
 		var chan = chat.find(target);
 		var msg;
+
+		if (!data.msg.highlight && !data.msg.self && (type === "message" || type === "notice") && highlights.some(function(h) {
+			return data.msg.text.indexOf(h) > -1;
+		})) {
+			data.msg.highlight = true;
+		}
 
 		if ([
 			"invite",
@@ -462,11 +472,14 @@ $(function() {
 			}
 			settings.find("#user-specified-css-input").val(options[i]);
 			continue;
-		}
-		if (options[i]) {
+		} else if (i === "highlights") {
+			settings.find("input[name=" + i + "]").val(options[i]);
+		} else if (options[i]) {
 			settings.find("input[name=" + i + "]").prop("checked", true);
 		}
 	}
+
+	var highlights = [];
 
 	settings.on("change", "input, textarea", function() {
 		var self = $(this);
@@ -497,6 +510,16 @@ $(function() {
 		if (name === "userStyles") {
 			$(document.head).find("#user-specified-css").html(options[name]);
 		}
+		if (name === "highlights") {
+			var highlightString = options[name];
+			highlights = highlightString.split(",").map(function(h) {
+				return h.trim();
+			}).filter(function(h) {
+				// Ensure we don't have empty string in the list of highlights
+				// otherwise, users get notifications for everything
+				return h !== "";
+			});
+		}
 	}).find("input")
 		.trigger("change");
 
@@ -518,7 +541,8 @@ $(function() {
 		viewport.toggleClass(self.attr("class"));
 		if (viewport.is(".lt, .rt")) {
 			e.stopPropagation();
-			chat.find(".chat").one("click", function() {
+			chat.find(".chat").one("click", function(e) {
+				e.stopPropagation();
 				viewport.removeClass("lt");
 			});
 		}
@@ -622,22 +646,47 @@ $(function() {
 		});
 	});
 
-	chat.on("click", ".inline-channel", function() {
-		var chan = $(".network")
-			.find(".chan.active")
+	function findCurrentNetworkChan(name) {
+		name = name.toLowerCase();
+
+		return $(".network .chan.active")
 			.parent(".network")
-			.find(".chan[data-title='" + $(this).data("chan") + "']");
-		if (chan.size() === 1) {
+			.find(".chan")
+			.filter(function() {
+				return $(this).data("title").toLowerCase() === name;
+			})
+			.first();
+	}
+
+	chat.on("click", ".inline-channel", function() {
+		var name = $(this).data("chan");
+		var chan = findCurrentNetworkChan(name);
+
+		if (chan.length) {
 			chan.click();
 		} else {
 			socket.emit("input", {
 				target: chat.data("id"),
-				text: "/join " + $(this).data("chan")
+				text: "/join " + name
 			});
 		}
 	});
 
-	chat.on("click", ".messages", function() {
+	chat.on("click", ".user", function() {
+		var name = $(this).data("name");
+		var chan = findCurrentNetworkChan(name);
+
+		if (chan.length) {
+			chan.click();
+		}
+
+		socket.emit("input", {
+			target: chat.data("id"),
+			text: "/whois " + name
+		});
+	});
+
+	chat.on("click", ".chat", function() {
 		setTimeout(function() {
 			var text = "";
 			if (window.getSelection) {
@@ -767,7 +816,7 @@ $(function() {
 	chat.on("input", ".search", function() {
 		var value = $(this).val().toLowerCase();
 		var names = $(this).closest(".users").find(".names");
-		names.find("button").each(function() {
+		names.find(".user").each(function() {
 			var btn = $(this);
 			var name = btn.text().toLowerCase().replace(/[+%@~]/, "");
 			if (name.indexOf(value) === 0) {
@@ -775,20 +824,6 @@ $(function() {
 			} else {
 				btn.hide();
 			}
-		});
-	});
-
-	var whois = false;
-	chat.on("click", ".user", function() {
-		var user = $(this).text().trim().replace(/[+%@~&]/, "");
-		if (user.indexOf("#") !== -1) {
-			return;
-		}
-		whois = true;
-		var text = "/whois " + user;
-		socket.emit("input", {
-			target: chat.data("id"),
-			text: text
 		});
 	});
 

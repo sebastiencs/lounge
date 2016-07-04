@@ -1,6 +1,7 @@
 var _ = require("lodash");
 var identd = require("../../identd");
 var Msg = require("../../models/msg");
+var Chan = require("../../models/chan");
 
 module.exports = function(irc, network) {
 	var client = this;
@@ -10,6 +11,39 @@ module.exports = function(irc, network) {
 		text: "Network created, connecting to " + network.host + ":" + network.port + "..."
 	}));
 
+	irc.on("registered", function() {
+		if (network.irc.network.cap.enabled.length > 0) {
+			network.channels[0].pushMessage(client, new Msg({
+				text: "Enabled capabilities: " + network.irc.network.cap.enabled.join(", ")
+			}));
+		}
+
+		var delay = 1000;
+		var commands = network.commands;
+		if (Array.isArray(commands)) {
+			commands.forEach(function(cmd) {
+				setTimeout(function() {
+					client.input({
+						target: network.channels[0].id,
+						text: cmd
+					});
+				}, delay);
+				delay += 1000;
+			});
+		}
+
+		network.channels.forEach(function(chan) {
+			if (chan.type !== Chan.Type.CHANNEL) {
+				return;
+			}
+
+			setTimeout(function() {
+				network.irc.join(chan.name);
+			}, delay);
+			delay += 1000;
+		});
+	});
+
 	irc.on("socket connected", function() {
 		network.channels[0].pushMessage(client, new Msg({
 			text: "Connected to the network."
@@ -18,7 +52,7 @@ module.exports = function(irc, network) {
 
 	irc.on("close", function() {
 		network.channels[0].pushMessage(client, new Msg({
-			text: "Disconnected from the network, and will not reconnect."
+			text: "Disconnected from the network, and will not reconnect. Use /connect to reconnect again."
 		}));
 	});
 
@@ -40,23 +74,26 @@ module.exports = function(irc, network) {
 		});
 	}
 
+	irc.on("debug", function(message) {
+		log.debug("[" + client.name + " (#" + client.id + ") on " + network.name + " (#" + network.id + ")]", message);
+	});
+
 	irc.on("socket error", function(err) {
-		log.debug("IRC socket error", err);
 		network.channels[0].pushMessage(client, new Msg({
 			type: Msg.Type.ERROR,
 			text: "Socket error: " + err
 		}));
 	});
 
-	irc.on("reconnecting", function() {
+	irc.on("reconnecting", function(data) {
 		network.channels[0].pushMessage(client, new Msg({
-			text: "Disconnected from the network. Reconnecting..."
+			text: "Disconnected from the network. Reconnecting in " + Math.round(data.wait / 1000) + " seconds… (Attempt " + data.attempt + " of " + data.max_retries + ")"
 		}));
 	});
 
 	irc.on("ping timeout", function() {
 		network.channels[0].pushMessage(client, new Msg({
-			text: "Ping timeout, disconnecting..."
+			text: "Ping timeout, disconnecting…"
 		}));
 	});
 

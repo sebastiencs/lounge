@@ -7,12 +7,10 @@ var Oidentd = require("./oidentd");
 module.exports = ClientManager;
 
 function ClientManager() {
-	var config = Helper.getConfig();
-
 	this.clients = [];
 
-	if (typeof config.oidentd === "string") {
-		this.identHandler = new Oidentd(config.oidentd);
+	if (typeof Helper.config.oidentd === "string") {
+		this.identHandler = new Oidentd(Helper.config.oidentd);
 	}
 }
 
@@ -84,7 +82,7 @@ ClientManager.prototype.addUser = function(name, password) {
 		};
 		fs.writeFileSync(
 			Helper.getUserConfigPath(name),
-			JSON.stringify(user, null, "  ")
+			JSON.stringify(user, null, "\t")
 		);
 	} catch (e) {
 		log.error("Failed to add user " + name, e);
@@ -108,7 +106,7 @@ ClientManager.prototype.updateUser = function(name, opts) {
 		_.assign(user, opts);
 		fs.writeFileSync(
 			Helper.getUserConfigPath(name),
-			JSON.stringify(user, null, " ")
+			JSON.stringify(user, null, "\t")
 		);
 	} catch (e) {
 		log.error("Failed to update user", e);

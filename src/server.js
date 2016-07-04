@@ -8,39 +8,32 @@ var fs = require("fs");
 var io = require("socket.io");
 var dns = require("dns");
 var Helper = require("./helper");
-var config = {};
 
 var manager = null;
 
-module.exports = function(options) {
+module.exports = function() {
 	manager = new ClientManager();
-	config = Helper.getConfig();
-	config = _.extend(config, options);
 
 	var app = express()
 		.use(allRequests)
 		.use(index)
 		.use(express.static("client"));
 
+	var config = Helper.config;
 	var server = null;
-	var https = config.https || {};
-	var protocol = https.enable ? "https" : "http";
-	var port = config.port;
-	var host = config.host;
-	var transports = config.transports || ["polling", "websocket"];
 
-	if (!https.enable) {
+	if (!config.https.enable) {
 		server = require("http");
-		server = server.createServer(app).listen(port, host);
+		server = server.createServer(app).listen(config.port, config.host);
 	} else {
 		server = require("spdy");
 		server = server.createServer({
-			key: fs.readFileSync(Helper.expandHome(https.key)),
-			cert: fs.readFileSync(Helper.expandHome(https.certificate))
-		}, app).listen(port, host);
+			key: fs.readFileSync(Helper.expandHome(config.https.key)),
+			cert: fs.readFileSync(Helper.expandHome(config.https.certificate))
+		}, app).listen(config.port, config.host);
 	}
 
-	if ((config.identd || {}).enable) {
+	if (config.identd.enable) {
 		if (manager.identHandler) {
 			log.warn("Using both identd and oidentd at the same time!");
 		}
@@ -49,7 +42,7 @@ module.exports = function(options) {
 	}
 
 	var sockets = io(server, {
-		transports: transports
+		transports: config.transports
 	});
 
 	sockets.on("connect", function(socket) {
@@ -62,13 +55,9 @@ module.exports = function(options) {
 
 	manager.sockets = sockets;
 
-	log.info("The Lounge v" + pkg.version + " is now running on", protocol + "://" + config.host + ":" + config.port + "/");
+	var protocol = config.https.enable ? "https" : "http";
+	log.info("The Lounge v" + pkg.version + " is now running on", protocol + "://" + (config.host || "*") + ":" + config.port + "/", (config.public ? "in public mode" : "in private mode"));
 	log.info("Press ctrl-c to stop\n");
-
-	if (!require("semver").satisfies(process.version, pkg.engines.node)) {
-		log.warn("The oldest supported Node.js version is ", pkg.engines.node);
-		log.warn("We strongly encourage you to upgrade, see https://nodejs.org/en/download/package-manager/ for more details\n");
-	}
 
 	if (!config.public) {
 		manager.loadUsers();
@@ -79,7 +68,7 @@ module.exports = function(options) {
 };
 
 function getClientIp(req) {
-	if (!config.reverseProxy) {
+	if (!Helper.config.reverseProxy) {
 		return req.connection.remoteAddress;
 	} else {
 		return req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -99,7 +88,7 @@ function index(req, res, next) {
 	return fs.readFile("client/index.html", "utf-8", function(err, file) {
 		var data = _.merge(
 			pkg,
-			config
+			Helper.config
 		);
 		var template = _.template(file);
 		res.setHeader("Content-Security-Policy", "default-src *; style-src * 'unsafe-inline'; script-src 'self'; child-src 'none'; object-src 'none'; form-action 'none'; referrer no-referrer;");
@@ -109,9 +98,9 @@ function index(req, res, next) {
 	});
 }
 
-function init(socket, client, token) {
+function init(socket, client) {
 	if (!client) {
-		socket.emit("auth");
+		socket.emit("auth", {success: true});
 		socket.on("auth", auth);
 	} else {
 		socket.on(
@@ -135,7 +124,7 @@ function init(socket, client, token) {
 				client.connect(data);
 			}
 		);
-		if (!config.public) {
+		if (!Helper.config.public) {
 			socket.on(
 				"change-password",
 				function(data) {
@@ -160,16 +149,21 @@ function init(socket, client, token) {
 						});
 						return;
 					}
+
 					var salt = bcrypt.genSaltSync(8);
 					var hash = bcrypt.hashSync(p1, salt);
-					if (client.setPassword(hash)) {
-						socket.emit("change-password", {
-							success: "Successfully updated your password"
-						});
-						return;
-					}
-					socket.emit("change-password", {
-						error: "Failed to update your password"
+
+					client.setPassword(hash, function(success) {
+						var obj = {};
+
+						if (success) {
+							obj.success = "Successfully updated your password, all your other sessions were logged out";
+							obj.token = client.config.token;
+						} else {
+							obj.error = "Failed to update your password";
+						}
+
+						socket.emit("change-password", obj);
 					});
 				}
 			);
@@ -196,12 +190,12 @@ function init(socket, client, token) {
 		socket.emit("init", {
 			active: client.activeChannel,
 			networks: client.networks,
-			token: token || ""
+			token: client.config.token || null
 		});
 	}
 }
 
-function reverseDnsLookup(socket, client, token) {
+function reverseDnsLookup(socket, client) {
 	client.ip = getClientIp(socket.request);
 
 	dns.reverse(client.ip, function(err, host) {
@@ -211,20 +205,20 @@ function reverseDnsLookup(socket, client, token) {
 			client.hostname = client.ip;
 		}
 
-		init(socket, client, token);
+		init(socket, client);
 	});
 }
 
 function auth(data) {
 	var socket = this;
-	if (config.public) {
+	if (Helper.config.public) {
 		var client = new Client(manager);
 		manager.clients.push(client);
 		socket.on("disconnect", function() {
 			manager.clients = _.without(manager.clients, client);
 			client.quit();
 		});
-		if (config.webirc) {
+		if (Helper.config.webirc) {
 			reverseDnsLookup(socket, client);
 		} else {
 			init(socket, client);
@@ -233,7 +227,7 @@ function auth(data) {
 		var success = false;
 		_.each(manager.clients, function(client) {
 			if (data.token) {
-				if (data.token === client.token) {
+				if (data.token === client.config.token) {
 					success = true;
 				}
 			} else if (client.config.user === data.user) {
@@ -242,20 +236,16 @@ function auth(data) {
 				}
 			}
 			if (success) {
-				var token;
-				if (data.remember || data.token) {
-					token = client.token;
-				}
-				if (config.webirc !== null && !client.config["ip"]) {
-					reverseDnsLookup(socket, client, token);
+				if (Helper.config.webirc !== null && !client.config["ip"]) {
+					reverseDnsLookup(socket, client);
 				} else {
-					init(socket, client, token);
+					init(socket, client);
 				}
 				return false;
 			}
 		});
 		if (!success) {
-			socket.emit("auth");
+			socket.emit("auth", {success: success});
 		}
 	}
 }

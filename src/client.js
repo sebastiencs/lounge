@@ -56,6 +56,9 @@ var inputs = [
 }, {});
 
 function Client(manager, name, config) {
+	if (typeof config !== "object") {
+		config = {};
+	}
 	_.merge(this, {
 		activeChannel: -1,
 		config: config,
@@ -65,29 +68,33 @@ function Client(manager, name, config) {
 		sockets: manager.sockets,
 		manager: manager
 	});
+
 	var client = this;
-	crypto.randomBytes(48, function(err, buf) {
-		client.token = buf.toString("hex");
-	});
-	if (config) {
-		var delay = 0;
-		(config.networks || []).forEach(function(n) {
-			setTimeout(function() {
-				client.connect(n);
-			}, delay);
-			delay += 1000;
+
+	if (client.name && !client.config.token) {
+		client.updateToken(function(token) {
+			client.manager.updateUser(client.name, {token: token});
 		});
 	}
 
-	log.info("User '" + name + "' loaded");
+	var delay = 0;
+	(client.config.networks || []).forEach(function(n) {
+		setTimeout(function() {
+			client.connect(n);
+		}, delay);
+		delay += 1000;
+	});
+
+	if (client.name) {
+		log.info("User '" + client.name + "' loaded");
+	}
 }
 
 Client.prototype.emit = function(event, data) {
 	if (this.sockets !== null) {
 		this.sockets.in(this.id).emit(event, data);
 	}
-	var config = this.config || {};
-	if (config.log === true) {
+	if (this.config.log === true) {
 		if (event === "msg") {
 			var target = this.find(data.chan);
 			if (target) {
@@ -128,11 +135,42 @@ Client.prototype.find = function(id) {
 };
 
 Client.prototype.connect = function(args) {
-	var config = Helper.getConfig();
+	var config = Helper.config;
 	var client = this;
 
 	var nick = args.nick || "lounge-user";
 	var webirc = null;
+	var channels = [];
+
+	if (args.channels) {
+		var badName = false;
+
+		args.channels.forEach(function(chan) {
+			if (!chan.name) {
+				badName = true;
+				return;
+			}
+
+			channels.push(new Chan({
+				name: chan.name
+			}));
+		});
+
+		if (badName && client.name) {
+			log.warn("User '" + client.name + "' on network '" + args.name + "' has an invalid channel which has been ignored");
+		}
+	// `join` is kept for backwards compatibility when updating from versions <2.0
+	// also used by the "connect" window
+	} else if (args.join) {
+		channels = args.join
+			.replace(/\,/g, " ")
+			.split(/\s+/g)
+			.map(function(chan) {
+				return new Chan({
+					name: chan
+				});
+			});
+	}
 
 	var network = new Network({
 		name: args.name || "",
@@ -145,6 +183,7 @@ Client.prototype.connect = function(args) {
 		commands: args.commands,
 		ip: args.ip,
 		hostname: args.hostname,
+		channels: channels,
 	});
 	network.setNick(nick);
 
@@ -214,37 +253,9 @@ Client.prototype.connect = function(args) {
 		localAddress: config.bind,
 		rejectUnauthorized: false,
 		auto_reconnect: true,
+		auto_reconnect_wait: 10000 + Math.floor(Math.random() * 1000), // If multiple users are connected to the same network, randomize their reconnections a little
+		auto_reconnect_max_retries: 360, // At least one hour (plus timeouts) worth of reconnections
 		webirc: webirc,
-	});
-
-	network.irc.on("registered", function() {
-		if (network.irc.network.cap.enabled.length > 0) {
-			network.channels[0].pushMessage(client, new Msg({
-				text: "Enabled capabilities: " + network.irc.network.cap.enabled.join(", ")
-			}));
-		}
-
-		var delay = 1000;
-		var commands = args.commands;
-		if (Array.isArray(commands)) {
-			commands.forEach(function(cmd) {
-				setTimeout(function() {
-					client.input({
-						target: network.channels[0].id,
-						text: cmd
-					});
-				}, delay);
-				delay += 1000;
-			});
-		}
-
-		var join = (args.join || "");
-		if (join) {
-			setTimeout(function() {
-				join = join.split(/\s+/);
-				network.irc.join(join[0], join[1]);
-			}, delay);
-		}
 	});
 
 	events.forEach(function(plugin) {
@@ -256,19 +267,35 @@ Client.prototype.connect = function(args) {
 	});
 };
 
-Client.prototype.setPassword = function(hash) {
+Client.prototype.updateToken = function(callback) {
 	var client = this;
-	client.manager.updateUser(client.name, {password: hash});
-	// re-read the hash off disk to ensure we use whatever is saved. this will
-	// prevent situations where the password failed to save properly and so
-	// a restart of the server would forget the change and use the old
-	// password again.
-	var user = client.manager.readUserConfig(client.name);
-	if (user.password === hash) {
-		client.config.password = hash;
-		return true;
-	}
-	return false;
+
+	crypto.randomBytes(48, function(err, buf) {
+		callback(client.config.token = buf.toString("hex"));
+	});
+};
+
+Client.prototype.setPassword = function(hash, callback) {
+	var client = this;
+
+	client.updateToken(function(token) {
+		client.manager.updateUser(client.name, {
+			token: token,
+			password: hash
+		});
+
+		// re-read the hash off disk to ensure we use whatever is saved. this will
+		// prevent situations where the password failed to save properly and so
+		// a restart of the server would forget the change and use the old
+		// password again.
+		var user = client.manager.readUserConfig(client.name);
+		if (user.password === hash) {
+			client.config.password = hash;
+			callback(true);
+		} else {
+			callback(false);
+		}
+	});
 };
 
 Client.prototype.input = function(data) {
@@ -400,9 +427,8 @@ Client.prototype.quit = function() {
 var timer;
 Client.prototype.save = function(force) {
 	var client = this;
-	var config = Helper.getConfig();
 
-	if (config.public) {
+	if (Helper.config.public) {
 		return;
 	}
 
