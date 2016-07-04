@@ -17,7 +17,9 @@ module.exports = function(irc, network) {
 		var links = [];
 		var split = data.message.replace(/\x02|\x1D|\x1F|\x16|\x0F|\x03(?:[0-9]{1,2}(?:,[0-9]{1,2})?)?/g, "").split(" ");
 		_.each(split, function(w) {
-			if (/^https?:\/\//.test(w)) {
+			// if (/^https?:\/\//.test(w)) {
+			// Disable link without ssl
+			if (/^https:\/\//.test(w)) {
 				links.push(w);
 			}
 		});
