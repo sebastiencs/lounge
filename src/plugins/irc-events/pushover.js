@@ -6,7 +6,7 @@ module.exports = function(irc, network) {
     var client = this;
 
     irc.on("privmsg", function(data) {
-	var config = Helper.getConfig();
+	var config = Helper.config;
 	var self = data.nick === irc.user.nick;
 	var highlight = false;
 
