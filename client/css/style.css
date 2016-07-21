@@ -87,7 +87,8 @@ body {
 }
 
 body {
-	background: #455164;
+	background: #303e4d;
+	/* background: #455164; */
 	color: #222;
 	font: 16px Lato, sans-serif;
 	margin: 0;
@@ -268,7 +269,7 @@ button {
 }
 
 #sidebar .networks {
-	padding: 20px 30px 0;
+	padding: 20px 20px 0;
 }
 
 #sidebar .networks:empty {
@@ -293,7 +294,7 @@ button {
 #sidebar .chan-placeholder {
 	display: block;
 	margin: 1px -10px;
-	padding: 6px 10px 8px 36px;
+	padding: 3px 10px 3px 36px;
 	position: relative;
 	text-align: left;
 	transition: color .2s;
@@ -365,7 +366,7 @@ button {
 	right: 0;
 	bottom: 0;
 	width: 20px;
-	background: linear-gradient(to right, rgba(69, 81, 100, 0) 0%, rgba(69, 81, 100, 1) 100%);
+	background: linear-gradient(to right, rgba(69, 81, 100, 0) 0%, rgba(48, 62, 77, 1) 100%);
 	content: " ";
 }
 
@@ -375,7 +376,7 @@ button {
 	color: #afb6c0;
 	font-size: 10px;
 	margin-top: 1px;
-	margin-right: -5px;
+	margin-right: -18px;
 	margin-left: 5px;
 	padding: 3px 6px;
 	float: right;
@@ -394,7 +395,7 @@ button {
 
 #sidebar .close {
 	border-radius: 3px;
-	margin-right: 5px;
+	margin-right: -8px;
 	visibility: hidden;
 	opacity: 0;
 	position: absolute;
@@ -1639,7 +1640,7 @@ button {
 }
 
 ::-webkit-scrollbar {
-	width: 8px;
+	width: 2px;
 	background-color: rgba(0, 0, 0, 0);
 }
 
