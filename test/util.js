@@ -1,3 +1,5 @@
+"use strict";
+
 var EventEmitter = require("events").EventEmitter;
 var util = require("util");
 var _ = require("lodash");
@@ -16,12 +18,12 @@ util.inherits(MockClient, EventEmitter);
 
 MockClient.prototype.createMessage = function(opts) {
 	var message = _.extend({
-		message: "dummy message",
+		text: "dummy message",
 		nick: "test-user",
 		target: "#test-channel"
 	}, opts);
 
-	this.emit("privmsg", message);
+	return message;
 };
 
 module.exports = {

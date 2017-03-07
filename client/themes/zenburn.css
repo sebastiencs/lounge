@@ -30,12 +30,11 @@ body {
 	background: #3f3f3f;
 }
 
-#main #chat,
-#main #form,
-#form .input,
-#chat,
-#windows .header {
-	font-family: "Open Sans", sans-serif !important;
+#windows .header .topic,
+#windows #form .input,
+.messages .msg,
+.sidebar {
+	font-family: inherit;
 	font-size: 13px;
 }
 
@@ -53,7 +52,6 @@ body {
 
 #sidebar {
 	background: #2b2b2b;
-	bottom: 48px;
 }
 
 #sidebar .chan .name:after {
@@ -74,41 +72,12 @@ body {
 	padding: 15px 16px;
 }
 
-#chat .search::-webkit-input-placeholder {
-	color: #d2d39b;
-	opacity: .5;
-}
-
 /* Borders */
 #chat .from,
 #windows .header,
 #chat .user-mode:before,
 #chat .sidebar {
 	border-color: #333;
-}
-
-/* Attach chat to window borders */
-#windows .window:before,
-#windows .chan:before {
-	display: none;
-}
-
-#footer {
-	left: 0;
-	bottom: 0;
-	width: 220px;
-}
-
-#main {
-	top: 0;
-	bottom: 0;
-	right: 0;
-	border-radius: 0;
-}
-
-#chat .chat,
-#chat .sidebar {
-	top: 48px;
 }
 
 /* User list */
@@ -166,16 +135,21 @@ body {
 	opacity: 1;
 }
 
+/* Increase contrast of some IRC colors */
+.irc-fg2 { color: #1b94ff; }
+.irc-fg5 { color: #e969a7; }
+.irc-fg12 { color: #6fb7ff; }
+
 /* Message form */
 #form {
 	background: #333;
 	border-color: #101010;
 }
 
-#form .input {
-	background-color: #434443;
-	border-color: #101010;
-	color: #dcdccc;
+#windows #form .input {
+	background-color: #434443 !important;
+	border-color: #101010 !important;
+	color: #dcdccc !important;
 }
 
 #form #nick {
@@ -202,6 +176,29 @@ body {
 	color: #d2d39b;
 }
 
+/* Notification dot on the top right corner of the menu icon */
+#viewport .lt:after {
+	border-color: #3f3f3f;
+}
+
+#chat .unread-marker,
+.date-marker {
+	opacity: 1;
+}
+
+#chat .unread-marker-text:before {
+	background-color: #3f3f3f;
+}
+
+#chat .date-marker:before {
+	border-color: #97ea70;
+}
+
+#chat .date-marker-text:before {
+	background-color: #3f3f3f;
+	color: #97ea70;
+}
+
 /* Setup text colors */
 #chat .msg {
 	color: #ffcfaf;
@@ -218,8 +215,13 @@ body {
 #chat .error,
 #chat .error .from,
 #chat .channel .highlight,
-#chat .channel .highlight .from {
+#chat .channel .highlight .from,
+#chat .channel .highlight .text {
 	color: #bc6c4c;
+}
+
+#chat .unhandled .from {
+	color: #aaa;
 }
 
 #chat .msg.quit .time,
@@ -252,12 +254,29 @@ body {
 	color: #d2d39b;
 }
 
-@media (max-width: 768px) {
-	#main {
-		left: 0;
-	}
-	#footer {
-		left: -220px;
-		width: 225px;
-	}
+.btn-reconnect {
+	background: #e74c3c;
+	color: #fff;
+	border: 0;
+	border-radius: 0;
+	margin: 0;
 }
+
+/* Form elements */
+
+#chat-container ::-moz-placeholder {
+	color: #d2d39b;
+	opacity: .5;
+}
+
+#chat-container ::-webkit-input-placeholder {
+	color: #d2d39b;
+	opacity: .5;
+}
+
+#chat-container :-ms-input-placeholder {
+	color: #d2d39b;
+	opacity: .5;
+}
+
+/* End form elements */

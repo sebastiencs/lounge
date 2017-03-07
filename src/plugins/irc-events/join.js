@@ -1,3 +1,5 @@
+"use strict";
+
 var Chan = require("../../models/chan");
 var Msg = require("../../models/msg");
 var User = require("../../models/user");
@@ -17,7 +19,7 @@ module.exports = function(irc, network) {
 				chan: chan
 			});
 		}
-		chan.users.push(new User({nick: data.nick, modes: ""}));
+		chan.users.push(new User({nick: data.nick}));
 		chan.sortUsers(irc);
 		client.emit("users", {
 			chan: chan.id

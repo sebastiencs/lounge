@@ -1,5 +1,8 @@
+"use strict";
+
 var colors = require("colors/safe");
 var moment = require("moment");
+const read = require("read");
 var Helper = require("./helper");
 
 function timestamp(type, messageArgs) {
@@ -27,4 +30,9 @@ exports.info = function() {
 
 exports.debug = function() {
 	console.log.apply(console, timestamp(colors.green("[DEBUG]"), arguments));
+};
+
+exports.prompt = (options, callback) => {
+	options.prompt = timestamp(colors.cyan("[PROMPT]"), [options.text]).join(" ");
+	read(options, callback);
 };

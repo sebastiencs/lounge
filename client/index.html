@@ -55,12 +55,32 @@
 						</div>
 					</div>
 				</div>
-				<div id="chat"></div>
+				<div id="chat-container" class="window">
+					<div id="chat"></div>
+					<button id="connection-error" class="btn btn-reconnect">Client connection lost &mdash; Click here to reconnect</button>
+					<form id="form" method="post" action="">
+						<div class="input">
+							<span id="nick">
+								<span id="nick-value" spellcheck="false"></span><!-- Comments here remove spaces between elements
+								--><span id="set-nick-tooltip" class="tooltipped tooltipped-e" aria-label="Change nick"><button id="set-nick" type="button" aria-label="Change nick"></button></span><!--
+								--><span id="cancel-nick-tooltip" class="tooltipped tooltipped-e" aria-label="Cancel"><button id="cancel-nick" type="button" aria-label="Cancel"></button></span><!--
+								--><span id="save-nick-tooltip" class="tooltipped tooltipped-e" aria-label="Save"><button id="submit-nick" type="button" aria-label="Save"></button></span>
+							</span>
+							<textarea id="input" class="mousetrap"></textarea>
+							<span id="cycle-nicks-tooltip" class="tooltipped tooltipped-w" aria-label="Cycle through nicks">
+								<button id="cycle-nicks" type="button" aria-label="Cycle through nicks"></button>
+							</span>
+							<span id="submit-tooltip" class="tooltipped tooltipped-w" aria-label="Send message">
+								<button id="submit" type="submit" aria-label="Send message"></button>
+							</span>
+						</div>
+					</form>
+				</div>
 				<div id="sign-in" class="window">
 					<form class="container" method="post" action="">
 						<div class="row">
 							<div class="col-xs-12">
-								<h1 class="title">Sign in</h1>
+								<h1 class="title">Sign in to The Lounge</h1>
 							</div>
 							<div class="col-xs-12">
 								<label>
@@ -69,7 +89,7 @@
 								</label>
 							</div>
 							<div class="col-xs-12">
-								<label class="port">
+								<label>
 								Password
 								<input class="input" type="password" name="password">
 								</label>
@@ -98,7 +118,11 @@
 					<form class="container" method="post" action="">
 						<div class="row">
 							<div class="col-sm-12">
-								<h1 class="title">Connect</h1>
+								<h1 class="title">
+									<%= public ? "The Lounge - " : "" %>
+									Connect
+									<%= !displayNetwork && lockNetwork ? "to " + defaults.name : "" %>
+								</h1>
 							</div>
 							<div <%= typeof(displayNetwork) !== "undefined" && !displayNetwork ? 'style="display: none;"' : ''%>>
 								<div class="col-sm-12">
@@ -145,12 +169,14 @@
 							<div class="col-sm-9">
 								<input class="input nick" id="connect:nick" name="nick" value="<%= defaults.nick %>">
 							</div>
+							<% if (!useHexIp) { %>
 							<div class="col-sm-3">
 								<label for="connect:username">Username</label>
 							</div>
 							<div class="col-sm-9">
 								<input class="input username" id="connect:username" name="username" value="<%= defaults.username %>">
 							</div>
+							<% } %>
 							<div class="col-sm-3">
 								<label for="connect:realname">Real name</label>
 							</div>
@@ -226,6 +252,19 @@
 									Enable colored nicknames
 								</label>
 							</div>
+							<div class="col-sm-12">
+								<h2>Theme</h2>
+							</div>
+							<div class="col-sm-12">
+								<label for="theme-select" class="sr-only">Theme</label>
+								<select id="theme-select" name="theme" class="input">
+									<% themes.forEach(function(themeName) { %>
+										<option value="<%= themeName %>">
+											<%= themeName.charAt(0).toUpperCase() + themeName.slice(1) %>
+										</option>
+									<% }) %>
+								</select>
+							</div>
 							<% if (typeof prefetch === "undefined" || prefetch !== false) { %>
 							<div class="col-sm-12">
 								<h2>Links and URLs</h2>
@@ -250,7 +289,14 @@
 								<label class="opt">
 								<input id="desktopNotifications" type="checkbox" name="desktopNotifications">
 								Enable desktop notifications<br>
-								<div class="error" id="warnDisabledDesktopNotifications"><strong>Warning</strong>: Desktop notifications are blocked by your web browser</div>
+								<div class="error" id="warnUnsupportedDesktopNotifications">
+									<strong>Warning</strong>:
+									Desktop notifications are not supported by your browser.
+								</div>
+								<div class="error" id="warnBlockedDesktopNotifications">
+									<strong>Warning</strong>:
+									Desktop notifications are blocked by your browser.
+								</div>
 								</label>
 							</div>
 							<div class="col-sm-12">
@@ -279,7 +325,7 @@
 								</label>
 							</div>
 
-							<% if (!public) { %>
+							<% if (!public  && !ldap.enable) { %>
 							<div id="change-password">
 								<form action="" method="post">
 									<div class="col-sm-12">
@@ -315,21 +361,23 @@
 							</div>
 							<div class="col-sm-12">
 								<p class="about">
-									You're currently running version <%= version %><br>
-									<a href="https://github.com/thelounge/lounge/blob/master/CHANGELOG.md#readme" target="_blank">View the change log</a>
+									<% if (gitCommit) { %>
+										The Lounge is running from source
+										(<a href="https://github.com/thelounge/lounge/tree/<%= gitCommit %>" target="_blank"><code><%= gitCommit %></code></a>).<br>
+									<% } else { %>
+										The Lounge is in version <strong><%= version %></strong>
+										(<a href="https://github.com/thelounge/lounge/releases/tag/v<%= version %>" target="_blank">See release notes</a>).<br>
+									<% } %>
+
+									<a href="https://thelounge.github.io/" target="_blank">Website</a><br>
+									<a href="https://thelounge.github.io/docs/" target="_blank">Documentation</a><br>
+									<a href="https://github.com/thelounge/lounge/issues/new" target="_blank">Report a bug</a>
 								</p>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<form id="form" method="post" action="">
-				<div class="input">
-					<label for="input" id="nick"></label>
-					<textarea id="input" class="mousetrap"></textarea>
-					<button id="submit" type="submit" title="Send" aria-label="Send message"></button>
-				</div>
-			</form>
 		</div>
 	</div>
 	</div>
@@ -338,10 +386,8 @@
 		<ul id="context-menu"></ul>
 	</div>
 
-	<script src="socket.io/socket.io.js"></script>
-	<script src="js/libs.min.js"></script>
-	<script src="js/lounge.templates.js"></script>
-	<script src="js/lounge.js"></script>
+	<script src="js/bundle.vendor.js"></script>
+	<script src="js/bundle.js"></script>
 
 	</body>
 </html>

@@ -10,7 +10,7 @@ GitHub: https://github.com/aynik
 
 @font-face {
 	font-family: Inconsolata-g;
-	src: url("fonts/inconsolatag.woff") format("woff"), url("fonts/inconsolatag.ttf") format("ttf");
+	src: url("../css/fonts/inconsolatag.woff") format("woff");
 }
 
 body {
@@ -30,15 +30,8 @@ a:hover,
 
 #windows .window h2 {
 	color: #666;
-	font: regular 14px Leto, sans-serif;
+	font: regular 14px Lato, sans-serif;
 	border-bottom: none;
-}
-
-#main {
-	right: 0;
-	bottom: 0;
-	top: 0;
-	border-radius: 0;
 }
 
 .container {
@@ -52,7 +45,7 @@ a:hover,
 
 #sign-in label input {
 	margin-top: 10px !important;
-	font: 14px Inconsolata-g, monospace;
+	font-size: 14px;
 }
 
 .btn {
@@ -65,9 +58,12 @@ a:hover,
 	background: #00ff0e;
 }
 
-#windows .window:before,
-#windows .chan:before {
-	content: none;
+.btn-reconnect {
+	background: #f00;
+	color: #fff;
+	border: 0;
+	border-radius: 0;
+	margin: 0;
 }
 
 #settings .opt {
@@ -76,7 +72,7 @@ a:hover,
 }
 
 #sign-in .remember {
-	font: 12px Inconsolata-g, monospace;
+	font-size: 12px;
 	line-height: 30px;
 }
 
@@ -97,19 +93,19 @@ a:hover,
 	color: #666;
 }
 
+#chat .unhandled .from {
+	color: #ddd;
+}
+
 #sidebar .active {
 	color: #fff;
 }
 
-#chat,
-#windows .header {
+#windows .header .topic,
+.messages .msg,
+.sidebar {
 	font: 12px Inconsolata-g, monospace;
 	line-height: 1.8;
-}
-
-#chat .chat,
-#chat .sidebar {
-	top: 48px;
 }
 
 #chat .user {
@@ -117,16 +113,19 @@ a:hover,
 	font-weight: bold;
 }
 
-#form .input {
-	font: 12px Inconsolata-g, monospace;
+#windows #form .input {
+	font-family: inherit;
+	font-size: 12px;
+}
+
+#windows select.input {
+	height: 38px;
 }
 
 #footer .icon {
 	color: #666;
 }
 
-@media (max-width: 768px) {
-	#main {
-		left: 0;
-	}
+.tooltipped:after {
+	font-family: Inconsolata-g, monospace;
 }

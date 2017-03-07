@@ -1,3 +1,5 @@
+import jQuery from "jquery";
+
 /*!
  * inputhistory
  * https://github.com/erming/inputhistory
@@ -18,7 +20,7 @@
 		);
 		
 		var self = this;
-		if (self.size() > 1) {
+		if (self.length > 1) {
 			return self.each(function() {
 				$(this).history(options);
 			});

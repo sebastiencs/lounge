@@ -1,11 +1,14 @@
+"use strict";
+
 var fs = require("fs");
 var fsextra = require("fs-extra");
 var moment = require("moment");
 var Helper = require("./helper");
 
 module.exports.write = function(user, network, chan, msg) {
+	const path = Helper.getUserLogsPath(user, network);
+
 	try {
-		var path = Helper.getUserLogsPath(user, network);
 		fsextra.ensureDirSync(path);
 	} catch (e) {
 		log.error("Unabled to create logs directory", e);
@@ -16,19 +19,28 @@ module.exports.write = function(user, network, chan, msg) {
 	var tz = Helper.config.logs.timezone || "UTC+00:00";
 
 	var time = moment().utcOffset(tz).format(format);
-	var line = "[" + time + "] ";
+	var line = `[${time}] `;
 
 	var type = msg.type.trim();
 	if (type === "message" || type === "highlight") {
 		// Format:
 		// [2014-01-01 00:00:00] <Arnold> Put that cookie down.. Now!!
-		line += "<" + msg.from + "> " + msg.text;
+		line += `<${msg.from}> ${msg.text}`;
 	} else {
 		// Format:
 		// [2014-01-01 00:00:00] * Arnold quit
-		line += "* " + msg.from + " " + msg.type;
-		if (msg.text) {
-			line += " " + msg.text;
+		line += `* ${msg.from} `;
+
+		if (msg.hostmask) {
+			line += `(${msg.hostmask}) `;
+		}
+
+		line += msg.type;
+
+		if (msg.new_nick) { // `/nick <new_nick>`
+			line += ` ${msg.new_nick}`;
+		} else if (msg.text) {
+			line += ` ${msg.text}`;
 		}
 	}
 

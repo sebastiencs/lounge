@@ -1,75 +1,71 @@
-[![#thelounge IRC channel on freenode](https://img.shields.io/badge/irc%20channel-%23thelounge%20on%20freenode-blue.svg)](https://avatar.playat.ch:1000/)
-[![npm version](https://img.shields.io/npm/v/thelounge.svg)](https://www.npmjs.org/package/thelounge)
-[![Travis CI Build Status](https://travis-ci.org/thelounge/lounge.svg?branch=master)](https://travis-ci.org/thelounge/lounge)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/deymtp0lldq78s8t/branch/master?svg=true)](https://ci.appveyor.com/project/astorije/lounge/branch/master)
-[![Dependency Status](https://david-dm.org/thelounge/lounge.svg)](https://david-dm.org/thelounge/lounge)
-[![devDependency Status](https://david-dm.org/thelounge/lounge/dev-status.svg)](https://david-dm.org/thelounge/lounge#info=devDependencies)
-
 # The Lounge
 
-__What is it?__
+[![#thelounge IRC channel on freenode](https://img.shields.io/badge/freenode-%23thelounge-BA68C8.svg)](https://avatar.playat.ch:1000/)
+[![npm version](https://img.shields.io/npm/v/thelounge.svg)](https://www.npmjs.org/package/thelounge)
+[![Travis CI Build Status](https://img.shields.io/travis/thelounge/lounge/master.svg?label=linux+build)](https://travis-ci.org/thelounge/lounge)
+[![AppVeyor Build Status](https://img.shields.io/appveyor/ci/astorije/lounge/master.svg?label=windows+build)](https://ci.appveyor.com/project/astorije/lounge/branch/master)
+[![Dependencies Status](https://img.shields.io/david/thelounge/lounge.svg)](https://david-dm.org/thelounge/lounge)
+[![Developer Dependencies Status](https://img.shields.io/david/dev/thelounge/lounge.svg)](https://david-dm.org/thelounge/lounge?type=dev)
 
-The Lounge is a web IRC client that you host on your own server.
+The Lounge is a modern web IRC client designed for self-hosting.
 
-*This is the official, community-managed fork of @erming's great initiative, the [Shout](https://github.com/erming/shout) project.*
+To learn more about configuration, usage and features of The Lounge, take a look at [the website](https://thelounge.github.io).
 
-__What features does it have?__
+<p align="center">
+	<img src="https://cloud.githubusercontent.com/assets/5481612/19623041/9bbaec40-9888-11e6-9961-8f3e0493ba30.png" width="550">
+</p>
 
-- Multiple user support
-- Stays connected even when you close the browser
-- Connect from multiple devices at once
-- Responsive layout — works well on your smartphone
-- _.. and more!_
+The Lounge is the official and community-managed fork of [Shout](https://github.com/erming/shout), by [Mattias Erming](https://github.com/erming).
 
-__Why the fork?__
+## Installation and usage
 
-We felt that the original [Shout](https://github.com/erming/shout) project
-"stagnated" a little because its original author wanted it to remain his pet
-project (which is a perfectly fine thing!).
+The Lounge requires [Node.js](https://nodejs.org/) v4 or more recent.
 
-A bunch of people, excited about doing things a bit differently than the upstream
-project forked it under a new name: “The Lounge”.
+### Running stable releases from npm (recommended)
 
-This fork aims to be community managed, meaning that the decisions are taken
-in a collegial fashion, and that a bunch of maintainers should be able to make
-the review process quicker and more streamlined.
+Run this in a terminal to install (or upgrade) the latest stable release from
+[npm](https://www.npmjs.com/):
 
-## Install
-
-To use The Lounge you must have [Node.js](https://nodejs.org/en/download/) installed.
-The oldest Node.js version we support is 4.2.0.
-
-If you still use 0.10 or 0.12 we strongly advise you to upgrade before installing The Lounge.
-For more information on how to upgrade, read the [documentation](https://nodejs.org/en/download/package-manager/).
-
-```
-sudo npm install -g thelounge
+```sh
+[sudo] npm install -g thelounge
 ```
 
-## Usage
+When installation is complete, run:
 
-When the install is complete, go ahead and run this in your terminal:
-
+```sh
+lounge start
 ```
+
+For more information, read the [documentation](https://thelounge.github.io/docs/), [wiki](https://github.com/thelounge/lounge/wiki), or run:
+
+```sh
 lounge --help
 ```
 
-For more information, read the [documentation](https://thelounge.github.io/docs/).
+### Running from source
 
-## Development setup
+The following commands install and run the development version of The Lounge:
 
-To run the app from source, just clone the code and run this in your terminal:
-
-```
+```sh
+git clone https://github.com/thelounge/lounge.git
+cd lounge
 npm install
+NODE_ENV=production npm run build
 npm start
 ```
 
-You will have to run `npm run build` if you change or add anything in
-`client/js/libs` or `client/views`.
+When installed like this, npm doesn't create a `lounge` executable. Use `npm start -- <command>` to run subcommands.
 
-## License
+⚠️ While it is the most recent codebase, this is not production-ready! Run at
+your own risk. It is also not recommended to run this as root.
 
-Available under the [MIT License](LICENSE).
+## Development setup
 
-Some fonts licensed under [SIL OFL](http://scripts.sil.org/OFL) and the [Apache License](http://www.apache.org/licenses/).
+Simply follow the instructions to run The Lounge from source above, on your own
+fork.
+
+Before submitting any change, make sure to:
+
+- Read the [Contributing instructions](https://github.com/thelounge/lounge/blob/master/CONTRIBUTING.md#contributing)
+- Run `npm test` to execute linters and test suite
+- Run `npm run build` if you change or add anything in `client/js/libs` or `client/views`

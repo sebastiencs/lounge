@@ -1,5 +1,5 @@
-<div class="msg {{type}}{{#if self}} self{{/if}}{{#if highlight}} highlight{{/if}}">
-	<span class="time">
+<div class="msg {{type}}{{#if self}} self{{/if}}{{#if highlight}} highlight{{/if}}" id="msg-{{id}}" data-time="{{time}}">
+	<span class="time" title="{{localetime time}}">
 		{{tz time}}
 	</span>
 	<span class="from">
@@ -13,7 +13,7 @@
 				<button id="toggle-{{id}}" class="toggle-button" aria-label="Toggle prefetched media">···</button>
 			</div>
 			{{#if toggle}}
-				{{partial "toggle"}}
+				{{> toggle}}
 			{{/if}}
 		</span>
 	{{else}}

@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = {
 	//
 	// Set the server mode.
@@ -54,17 +56,6 @@ module.exports = {
 	theme: "themes/example.css",
 
 	//
-	// Autoload users
-	//
-	// When this setting is enabled, your 'users/' folder will be monitored. This is useful
-	// if you want to add/remove users while the server is running.
-	//
-	// @type     boolean
-	// @default  true
-	//
-	autoload: true,
-
-	//
 	// Prefetch URLs
 	//
 	// If enabled, The Lounge will try to load thumbnails and site descriptions from
@@ -106,6 +97,17 @@ module.exports = {
 	// @default  false
 	//
 	lockNetwork: false,
+
+	//
+	// Hex IP
+	//
+	// If enabled, clients' username will be set to their IP encoded has hex.
+	// This is done to share the real user IP address with the server for host masking purposes.
+	//
+	// @type     boolean
+	// @default  false
+	//
+	useHexIp: false,
 
 	//
 	// WEBIRC support
@@ -158,11 +160,11 @@ module.exports = {
 	//
 	// Defines the maximum number of history lines that will be kept in
 	// memory per channel/query, in order to reduce the memory usage of
-	// the server. Negative means unlimited.
+	// the server. Setting this to -1 will keep unlimited amount.
 	//
 	// @type     integer
-	// @default  -1
-	maxHistory: -1,
+	// @default  10000
+	maxHistory: 10000,
 
 	//
 	// Default values for the 'Connect' form.
@@ -347,4 +349,60 @@ module.exports = {
 		appToken: ""
 	},
 
+	// LDAP authentication settings (only available if public=false)
+	// @type    object
+	// @default {}
+	//
+	ldap: {
+		//
+		// Enable LDAP user authentication
+		//
+		// @type     boolean
+		// @default  false
+		//
+		enable: false,
+
+		//
+		// LDAP server URL
+		//
+		// @type     string
+		//
+		url: "ldaps://example.com",
+
+		//
+		// LDAP base dn
+		//
+		// @type     string
+		//
+		baseDN: "ou=accounts,dc=example,dc=com",
+
+		//
+		// LDAP primary key
+		//
+		// @type     string
+		// @default  "uid"
+		//
+		primaryKey: "uid"
+	},
+
+	// Extra debugging
+	//
+	// @type     object
+	// @default  {}
+	//
+	debug: {
+		// Enables extra debugging output provided by irc-framework.
+		//
+		// @type     boolean
+		// @default  false
+		//
+		ircFramework: false,
+
+		// Enables logging raw IRC messages into each server window.
+		//
+		// @type     boolean
+		// @default  false
+		//
+		raw: false,
+	},
 };

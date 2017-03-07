@@ -1,18 +1,21 @@
+"use strict";
+
 var _ = require("lodash");
 var Msg = require("../../models/msg");
 
 module.exports = function(irc, network) {
 	var client = this;
 	irc.on("nick", function(data) {
+		let msg;
 		var self = false;
 		if (data.nick === irc.user.nick) {
 			network.setNick(data.new_nick);
 
 			var lobby = network.channels[0];
-			var msg = new Msg({
+			msg = new Msg({
 				text: "You're now known as " + data.new_nick,
 			});
-			lobby.pushMessage(client, msg);
+			lobby.pushMessage(client, msg, true);
 			self = true;
 			client.save();
 			client.emit("nick", {
@@ -21,7 +24,7 @@ module.exports = function(irc, network) {
 			});
 		}
 
-		network.channels.forEach(function(chan) {
+		network.channels.forEach(chan => {
 			var user = _.find(chan.users, {name: data.nick});
 			if (typeof user === "undefined") {
 				return;
@@ -31,11 +34,11 @@ module.exports = function(irc, network) {
 			client.emit("users", {
 				chan: chan.id
 			});
-			var msg = new Msg({
+			msg = new Msg({
 				time: data.time,
+				from: data.nick,
 				type: Msg.Type.NICK,
 				mode: chan.getMode(data.new_nick),
-				nick: data.nick,
 				new_nick: data.new_nick,
 				self: self
 			});

@@ -1,15 +1,16 @@
-Handlebars.registerHelper(
-	"parse", function(text) {
-		text = Handlebars.Utils.escapeExpression(text);
-		text = colors(text);
-		text = channels(text);
-		text = uri(text);
-		return text;
-	}
-);
+import Handlebars from "handlebars/runtime";
+import URI from "urijs";
+
+module.exports = function(text) {
+	text = Handlebars.Utils.escapeExpression(text);
+	text = colors(text);
+	text = channels(text);
+	text = uri(text);
+	return text;
+};
 
 function uri(text) {
-	return window.URI.withinString(text, function(url) {
+	return URI.withinString(text, function(url) {
 		if (url.indexOf("javascript:") === 0) {
 			return url;
 		}
@@ -31,7 +32,7 @@ function uri(text) {
  */
 function channels(text) {
 	return text.replace(
-		/(^|\s|\x07|,)((?:#|&amp;)[^\x07\s\,]{1,49})/g,
+		/(^|\s|\x07|,)((?:#|&amp;)[^\x07\s,]{1,49})/g,
 		'$1<span class="inline-channel" role="button" tabindex="0" data-chan="$2">$2</span>'
 	);
 }
@@ -112,10 +113,10 @@ function colors(line) {
 			return;
 		}
 
-		result = result.replace(style.keyregex, function(match, text) {
+		result = result.replace(style.keyregex, function(matchedTrash, matchedText) {
 			return styleTemplate({
-				"style": style.style,
-				"text": text
+				style: style.style,
+				text: matchedText
 			});
 		});
 	});

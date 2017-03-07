@@ -1,5 +1,20 @@
-# This should match the .gitignore file without the generated assets
+# This file must not contain generated assets listed in .gitignore.
 # npm-debug.log and node_modules/ are ignored by default.
 # See https://docs.npmjs.com/misc/developers#keeping-files-out-of-your-package
 
+client/js/bundle.vendor.js.map
+client/views/
 coverage/
+scripts/
+test/
+.editorconfig
+.eslintignore
+.eslintrc.yml
+.gitattributes
+.gitignore
+.nycrc
+.npmignore
+.stylelintrc
+.travis.yml
+appveyor.yml
+webpack.config.js
