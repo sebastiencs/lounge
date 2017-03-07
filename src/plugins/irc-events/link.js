@@ -16,7 +16,9 @@ module.exports = function(client, chan, originalMsg) {
 	const links = originalMsg.text
 		.replace(/\x02|\x1D|\x1F|\x16|\x0F|\x03(?:[0-9]{1,2}(?:,[0-9]{1,2})?)?/g, "")
 		.split(" ")
-		.filter(w => /^https?:\/\//.test(w));
+		.filter(w => /^https:\/\//.test(w));
+  /* .filter(w => /^https?:\/\//.test(w));*/
+  /* disable links without https*/
 
 	if (links.length === 0) {
 		return;

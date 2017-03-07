@@ -31,7 +31,7 @@ var events = [
 	"quit",
 	"topic",
 	"welcome",
-	"pushover"
+	"pushover",
 	"list",
 	"whois"
 ];
